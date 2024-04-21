@@ -4,7 +4,6 @@
         "conan": {}
     },
     "include": [
-        "C:\\Users\\zino.ferife\\sources\\minty\\build\\build\\CMakePresets.json",
         "C:\\Users\\zino.ferife\\sources\\minty\\build\\CMakePresets.json"
     ]
 }
