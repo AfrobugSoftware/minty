@@ -9,6 +9,7 @@
 #include "Actor.h"
 #include "animspritecomponent.h"
 #include "movecomponent.h"
+#include "towergame.h"
 #include <random>
 
 
@@ -256,7 +257,6 @@ public:
             ac->AddComponents(mvc);
 
             astriods.emplace_back(ac);
-            AddSprite(spc);
         }
 
         auto player = new minty::Actor(this);
@@ -273,10 +273,9 @@ public:
         input->mMaxLinerSpeed = 90;
         input->mMaxAngularSpeed = glm::pi<float>();
 
+
         player->AddComponents(col);
         player->AddComponents(input);
-
-        AddSprite(col);
         return true;
     }
 };
@@ -285,13 +284,12 @@ public:
 
 int main(int argc, char** argv)
 {
-    Astriods game;
+    minty::TowerGame game;
     if (game.Init()) {
         if (game.LoadData()) {
              game.RunLoop();
         }
     }
-
     game.Shutdown();
     return 0;
 }

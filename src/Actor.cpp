@@ -11,12 +11,20 @@ minty::Actor::Actor(Game* game)
 
 minty::Actor::~Actor()
 {
+	delete mBoundVolume;
 }
 
 void minty::Actor::Update(float dt)
 {
 	UpdateActor(dt);
 	UpdateComponents(dt);
+}
+
+void minty::Actor::Draw(SDL_Renderer* render)
+{
+	for (auto& comp : mComponents) {
+		comp->Draw(render);
+	}
 }
 
 void minty::Actor::UpdateComponents(float deltatime)

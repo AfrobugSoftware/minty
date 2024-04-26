@@ -76,3 +76,43 @@ void minty::InputComponent::ProcessInput(const std::uint8_t* state)
 	mAngularSpeed = angularSpeed;
 }
 
+minty::NavComponent::NavComponent(Actor* owner, std::uint32_t updateOrder)
+: MoveComponent(owner, updateOrder){
+}
+
+minty::NavComponent::~NavComponent()
+{
+}
+
+void minty::NavComponent::Update(float deltatime)
+{
+	/*glm::vec2 diff = mActor->GetPos() - mNextPos;
+	if (glm::length(diff) <= 2.0f) {
+		TurnTo(mNextPos);
+	}*/
+	//move the actor forward
+	MoveComponent::Update(deltatime);
+}
+
+void minty::NavComponent::TurnTo(glm::vec2 pos)
+{
+	glm::vec2 forward = glm::normalize(pos - mActor->GetPos());
+	float angle = std::atan2(-forward.y, forward.x);
+	mActor->SetRotation(angle);
+}
+
+glm::vec2 minty::NavComponent::GetNextPos()
+{
+	return glm::vec2(0.0f, 0.0f);
+}
+
+void minty::NavComponent::SetForwardSpeed(float speed)
+{
+	mLinerSpeed = speed;
+}
+
+void minty::NavComponent::StartPath(glm::vec2 pos)
+{
+	mNextPos = pos;
+	TurnTo(pos);
+}

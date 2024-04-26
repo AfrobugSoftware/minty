@@ -1,5 +1,6 @@
 #pragma once
 #include"glm/glm.hpp"
+#include <SDL2/SDL_render.h>
 #include <vector>
 #include <ranges>
 
@@ -34,6 +35,7 @@ namespace minty
 		virtual ~Actor();
 
 		void Update(float dt);
+		virtual void Draw(SDL_Renderer* render);
 		void UpdateComponents(float deltatime);
 		virtual void UpdateActor(float deltaTime);
 		inline constexpr std::vector<class Component*>& GetComponents() { return mComponents;  };
@@ -55,11 +57,13 @@ namespace minty
 
 		void ProcessInput(const std::uint8_t* state);
 		virtual void ActorInput(const std::uint8_t* state) {}
+		virtual void ActorMouseInput(const float x, const float y) {}
 
 		glm::vec2 GetForward() const;
 		void SetRotation(const glm::vec2& v);
 
 		constexpr const Game* GetGame() const { return mGame; }
+		constexpr Game* GetGame()  { return mGame; }
 
 		virtual bool Intersects(const BoundVolume* bv) const;
 
@@ -69,7 +73,7 @@ namespace minty
 		float rotation = 0.0f;
 		float scale = 1.0f;
 		class Game* mGame = NULL;
-		BoundVolume* mBoundVolume;
+		BoundVolume* mBoundVolume = NULL;
 
 		std::vector<class Component*> mComponents;
 	};

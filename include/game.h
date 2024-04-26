@@ -36,12 +36,13 @@ namespace minty
 		void RemvActor(class Actor* ac);
 
 		SDL_Texture* LoadTexture(const fs::path& filename);
-		void AddSprite(minty::SpriteComponent* sprite);
 		inline constexpr glm::ivec2 GetScreenSize() const { return mScreenSize; }
 
 		//virtual
 		virtual bool LoadData() { return true; }
-	private:
+		SDL_Texture* GetTexture(const std::string& name);
+	protected:
+		std::unordered_map<std::string, SDL_Texture*> mTexMap;
 		std::uint32_t mTicks = 0;
 		bool mUpdatingActor = false;
 		bool mIsRunning = false;
@@ -52,6 +53,5 @@ namespace minty
 		glm::ivec2 mScreenSize;
 		std::vector<class Actor*> mActors;
 		std::vector<class Actor*> mPendingActors;
-		std::vector<SpriteComponent*> mSprites;
 	};
 };

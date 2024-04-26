@@ -15,7 +15,7 @@ namespace minty {
 		//public because setting and getting has no side effects
 		float mAngularSpeed = 0.0f;
 		float mLinerSpeed = 0.0f;
-		bool mWrapScreen = true;
+		bool mWrapScreen = false;
 		
 	};
 
@@ -38,5 +38,20 @@ namespace minty {
 		int mDownKey = 0;
 		int mClockwiseKey = 0;
 		int mCounterClockwiseKey = 0;
+	};
+
+	class NavComponent : public MoveComponent
+	{
+	public:
+		NavComponent(class Actor* owner, std::uint32_t updateOrder = 100);
+		virtual ~NavComponent();
+
+		virtual void Update(float deltatime) override;
+		void TurnTo(glm::vec2 pos);
+		glm::vec2 GetNextPos();
+
+		void SetForwardSpeed(float speed);
+		void StartPath(glm::vec2 pos);
+		glm::vec2 mNextPos{};
 	};
 };

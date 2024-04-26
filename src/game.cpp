@@ -6,7 +6,14 @@ minty::Game::Game() {
 }
 
 minty::Game::~Game() {
-
+    if (!mActors.empty()) {
+        delete mActors.back();
+        mActors.pop_back();
+    }
+    if (!mPendingActors.empty()) {
+        delete mPendingActors.back();
+        mPendingActors.pop_back();
+    }
 }
 
 bool minty::Game::Init() {
@@ -15,8 +22,7 @@ bool minty::Game::Init() {
         spdlog::error("SDL could not initialize! SDL_Error: {}\n", SDL_GetError());
         return false;
     }
-    mWindow = SDL_CreateWindow("minty", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SKIP_TASKBAR);
-    mScreenSize = glm::ivec2(SCREEN_WIDTH, SCREEN_HEIGHT);
+    mWindow = SDL_CreateWindow("minty", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, mScreenSize.x, mScreenSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
     if (mWindow == NULL)
     {
         spdlog::error("Window could not be created! SDL_Error: {}\n", SDL_GetError());
@@ -45,11 +51,17 @@ bool minty::Game::Init() {
 void minty::Game::ProcessInput() {
     SDL_Event e;
     bool isResized = false;
+    bool isClicked = false;
+    glm::ivec2 mouse{};
     while (SDL_PollEvent(&e)) {
         switch (e.type)
         {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
             isResized = true;
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            SDL_GetMouseState(&mouse.x, &mouse.y);
+            isClicked = true;
             break;
         case SDL_QUIT:
             mIsRunning = false;
@@ -64,11 +76,13 @@ void minty::Game::ProcessInput() {
         SDL_GetWindowSize(mWindow, &w, &h);
         mScreenSize = { w,h };
     }
-
     const std::uint8_t* state = SDL_GetKeyboardState(NULL);
     mUpdatingActor = true;
     for (auto& ac : mActors) {
         ac->ProcessInput(state);
+        if (isClicked) {
+            ac->ActorMouseInput(mouse.x, mouse.y);
+        }
     }
     mUpdatingActor = false;
 }
@@ -83,11 +97,19 @@ void minty::Game::Update() {
     std::vector<Actor*> deads;
     for (auto actor : mActors) {
         actor->Update(dt);
-      /*  if (actor->GetState() == minty::Actor::state::DEAD) {
+        if (actor->GetState() == minty::Actor::state::DEAD) {
             deads.emplace_back(actor);
-        }*/
+        }
     }
     mUpdatingActor = false;
+
+    //remove dead actors
+    auto remv = std::remove_if(mActors.begin(), mActors.end(), [&](auto acc) -> bool {
+        if (std::any_of(deads.begin(), deads.end(), [&](auto d) -> bool { return acc == d; })) {
+            return true;
+        }
+        });
+    mActors.erase(remv, std::end(mActors));
 
     for (auto pactor : mPendingActors) {
         mActors.emplace_back(pactor);
@@ -105,8 +127,8 @@ void minty::Game::Render() {
     SDL_SetRenderDrawColor(mRender, 0xFA, 0x3A, 0xFA, 0xFF);
     SDL_RenderClear(mRender);
 
-    for (auto& sp : mSprites) {
-        sp->Draw(mRender);
+    for (auto& acc : mActors) {
+        acc->Draw(mRender);
     }
 
     SDL_RenderPresent(mRender);
@@ -121,6 +143,10 @@ void minty::Game::Shutdown() {
         delete mPendingActors.back();
         mPendingActors.pop_back();
     }
+    for (auto& i : mTexMap) {
+        SDL_DestroyTexture(i.second);
+    }
+    mTexMap.clear();
     IMG_Quit();
     SDL_DestroyRenderer(mRender);
     SDL_DestroyWindow(mWindow);
@@ -154,7 +180,19 @@ SDL_Texture* minty::Game::LoadTexture(const fs::path& filename)
     }
     auto text = SDL_CreateTextureFromSurface(mRender, sur);
     SDL_FreeSurface(sur);
+    if (text) {
+        mTexMap.insert({ filename.stem().string(), text });
+    }
     return text;
+}
+
+SDL_Texture* minty::Game::GetTexture(const std::string& name)
+{
+    auto iter = mTexMap.find(name);
+    if (iter != mTexMap.end()) {
+        return iter->second;
+    }
+    return nullptr;
 }
 
 void minty::Game::RunLoop() {
@@ -167,13 +205,4 @@ void minty::Game::RunLoop() {
     }
 }
 
-void minty::Game::AddSprite(minty::SpriteComponent* sprite)
-{
-    auto iter = std::lower_bound(mSprites.begin(), mSprites.end(), sprite, [](minty::SpriteComponent* sp, minty::SpriteComponent* sprite) -> bool {
-        return sp->GetDrawOrder() < sprite->GetDrawOrder();
-    });
-    if (iter == mSprites.end()) {
-        mSprites.emplace_back(sprite);
-    }
-    else mSprites.insert(iter, sprite);
-}
+
