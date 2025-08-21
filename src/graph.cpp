@@ -114,9 +114,9 @@ bool minty::Astar(WeightedGraph& graph, WeightedNode* start, WeightedNode* end, 
 		auto iter = std::min_element(openSet.begin(), openSet.end(),
 			[&outMap](const WeightedNode* a, const WeightedNode* b) {
 				// Calculate f(x) for nodes a/b
-				float fOfA = outMap[a].mHuristic + outMap[a].mActualFromStart;
-		float fOfB = outMap[b].mHuristic + outMap[b].mActualFromStart;
-		return fOfA < fOfB;
+				const float fOfA = outMap[a].mHuristic + outMap[a].mActualFromStart;
+				const float fOfB = outMap[b].mHuristic + outMap[b].mActualFromStart;
+				return fOfA < fOfB;
 			});
 		// Set to current and move from open to closed
 		current = *iter;
